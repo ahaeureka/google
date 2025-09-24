@@ -29,6 +29,8 @@ jobs:
 
       - name: Sync protobuf & googleapis (.proto only)
         run: |
+          set -e
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
@@ -44,7 +46,6 @@ jobs:
           PROTO_HASH=$(git rev-parse --short HEAD)
           cd ..
           mkdir -p protobuf
-          # 只复制 .proto 文件，去掉中间目录
           find tmp-protobuf/src/google -name "*.proto" -type f -exec cp {} protobuf/ \;
           rm -rf tmp-protobuf
 
@@ -60,7 +61,7 @@ jobs:
           find tmp-googleapis/google/api -name "*.proto" -type f -exec cp {} api/ \;
           rm -rf tmp-googleapis
 
-          # 冲突检测（按文件名，不考虑目录）
+          # 冲突检测（按文件名）
           CONFLICTS=$(comm -12 \
             <(find api -name "*.proto" -type f | xargs -n1 basename | sort) \
             <(find protobuf -name "*.proto" -type f | xargs -n1 basename | sort))
@@ -75,10 +76,10 @@ jobs:
           if git diff --cached --quiet; then
             echo "✅ No changes, nothing to commit."
           else
+            # commit message 多行，YAML 不报错
             git commit -m "chore: sync google dependencies
 
 protobuf: $PROTO_REF @ $PROTO_HASH
 googleapis: $GA_REF @ $GA_HASH"
             git push
           fi
-
