@@ -24,6 +24,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: true
 
       - name: Sync protobuf & googleapis (.proto only)
         run: |
@@ -42,8 +44,8 @@ jobs:
           PROTO_HASH=$(git rev-parse --short HEAD)
           cd ..
           mkdir -p protobuf
-          # 只同步 .proto 文件，保留相对路径
-          find tmp-protobuf/src/google -name "*.proto" -type f -exec rsync -R {} protobuf/ \;
+          # 只复制 .proto 文件，去掉中间目录
+          find tmp-protobuf/src/google -name "*.proto" -type f -exec cp {} protobuf/ \;
           rm -rf tmp-protobuf
 
           # -------- 拉取 googleapis --------
@@ -55,7 +57,7 @@ jobs:
           GA_HASH=$(git rev-parse --short HEAD)
           cd ..
           mkdir -p api
-          find tmp-googleapis/google/api -name "*.proto" -type f -exec rsync -R {} api/ \;
+          find tmp-googleapis/google/api -name "*.proto" -type f -exec cp {} api/ \;
           rm -rf tmp-googleapis
 
           # 冲突检测（按文件名，不考虑目录）
@@ -69,11 +71,14 @@ jobs:
           fi
 
           # 提交更新
-          git add protobuf/*.proto api/*.proto
+          git add protobuf api
           if git diff --cached --quiet; then
             echo "✅ No changes, nothing to commit."
           else
-            git commit -m "chore: sync google dependencies\n\nprotobuf: $PROTO_REF @ $PROTO_HASH\ngoogleapis: $GA_REF @ $GA_HASH"
+            git commit -m "chore: sync google dependencies
+
+protobuf: $PROTO_REF @ $PROTO_HASH
+googleapis: $GA_REF @ $GA_HASH"
             git push
           fi
 
