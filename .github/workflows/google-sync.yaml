@@ -1,0 +1,87 @@
+name: Sync Google Dependencies
+
+on:
+  schedule:
+    - cron: "0 2 * * *"   # 每天凌晨 2 点 UTC
+  workflow_dispatch:
+    inputs:
+      protobuf_ref:
+        description: "protobuf branch or tag"
+        required: false
+        default: "main"
+      googleapis_ref:
+        description: "googleapis branch or tag"
+        required: false
+        default: "master"
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout my repo
+        uses: actions/checkout@v4
+
+      # 清理根目录旧的 protobuf / googleapis 文件
+      - name: Clean existing files
+        run: |
+          rm -rf */*.proto */*.py */*.cc */*.h */google/*
+
+      # 拉取 protobuf/src/google
+      - name: Clone protobuf (sparse checkout src/google)
+        run: |
+          PROTO_REF="${{ github.event.inputs.protobuf_ref || 'main' }}"
+          git clone --depth 1 --branch "$PROTO_REF" --filter=blob:none https://github.com/protocolbuffers/protobuf.git tmp-protobuf
+          cd tmp-protobuf
+          git sparse-checkout init --cone
+          git sparse-checkout set src/google
+          PROTO_HASH=$(git rev-parse --short HEAD)
+          cd ..
+          # 移动 src/google 下的所有内容到根目录
+          rsync -av tmp-protobuf/src/google/ ./
+          rm -rf tmp-protobuf
+
+      # 拉取 googleapis/google/api
+      - name: Clone googleapis (sparse checkout google/api)
+        run: |
+          GA_REF="${{ github.event.inputs.googleapis_ref || 'master' }}"
+          git clone --depth 1 --branch "$GA_REF" --filter=blob:none https://github.com/googleapis/googleapis.git tmp-googleapis
+          cd tmp-googleapis
+          git sparse-checkout init --cone
+          git sparse-checkout set google/api
+          GA_HASH=$(git rev-parse --short HEAD)
+          cd ..
+
+          # 冲突检测：根目录下是否有同名文件
+          CONFLICTS=$(comm -12 \
+            <(find tmp-googleapis/google/api -type f | sed 's|tmp-googleapis/google/api/||' | sort) \
+            <(find . -type f | sed 's|./||' | sort) )
+          if [ -n "$CONFLICTS" ]; then
+            echo "❌ Conflict detected! The following files exist in both protobuf and googleapis:"
+            echo "$CONFLICTS"
+            exit 1
+          fi
+
+          # 没冲突才合并
+          rsync -av tmp-googleapis/google/api/ ./
+          rm -rf tmp-googleapis
+
+      # 提交更新
+      - name: Commit & Push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          if git diff --cached --quiet; then
+            echo "✅ No changes, nothing to commit."
+          else
+            git commit -m "chore: sync google dependencies
+
+protobuf: $PROTO_REF @ $PROTO_HASH
+googleapis: $GA_REF @ $GA_HASH"
+            git push
+          fi
+
