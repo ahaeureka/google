@@ -14,308 +14,282 @@
 
 syntax = "proto3";
 
-package google.api.cloudquotas.v1;
+package google.api.servicemanagement.v1;
 
+import "google/api/config_change.proto";
 import "google/api/field_behavior.proto";
-import "google/api/resource.proto";
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/wrappers.proto";
 
-option csharp_namespace = "Google.Cloud.CloudQuotas.V1";
-option go_package = "cloud.google.com/go/cloudquotas/apiv1/cloudquotaspb;cloudquotaspb";
+option csharp_namespace = "Google.Cloud.ServiceManagement.V1";
+option go_package = "cloud.google.com/go/servicemanagement/apiv1/servicemanagementpb;servicemanagementpb";
 option java_multiple_files = true;
 option java_outer_classname = "ResourcesProto";
-option java_package = "com.google.api.cloudquotas.v1";
-option php_namespace = "Google\\Cloud\\CloudQuotas\\V1";
-option ruby_package = "Google::Cloud::CloudQuotas::V1";
+option java_package = "com.google.api.servicemanagement.v1";
+option objc_class_prefix = "GASM";
+option php_namespace = "Google\\Cloud\\ServiceManagement\\V1";
+option ruby_package = "Google::Cloud::ServiceManagement::V1";
 
-// Enumerations of quota safety checks.
-enum QuotaSafetyCheck {
-  // Unspecified quota safety check.
-  QUOTA_SAFETY_CHECK_UNSPECIFIED = 0;
+// The full representation of a Service that is managed by
+// Google Service Management.
+message ManagedService {
+  // The name of the service. See the
+  // [overview](https://cloud.google.com/service-infrastructure/docs/overview)
+  // for naming requirements.
+  string service_name = 2;
 
-  // Validates that a quota mutation would not cause the consumer's effective
-  // limit to be lower than the consumer's quota usage.
-  QUOTA_DECREASE_BELOW_USAGE = 1;
-
-  // Validates that a quota mutation would not cause the consumer's effective
-  // limit to decrease by more than 10 percent.
-  QUOTA_DECREASE_PERCENTAGE_TOO_HIGH = 2;
+  // ID of the project that produces and owns this service.
+  string producer_project_id = 3;
 }
 
-// QuotaInfo represents information about a particular quota for a given
-// project, folder or organization.
-message QuotaInfo {
-  option (google.api.resource) = {
-    type: "cloudquotas.googleapis.com/QuotaInfo"
-    pattern: "projects/{project}/locations/{location}/services/{service}/quotaInfos/{quota_info}"
-    pattern: "folders/{folder}/locations/{location}/services/{service}/quotaInfos/{quota_info}"
-    pattern: "organizations/{organization}/locations/{location}/services/{service}/quotaInfos/{quota_info}"
-  };
+// The metadata associated with a long running operation resource.
+message OperationMetadata {
+  // Represents the status of one operation step.
+  message Step {
+    // The short description of the step.
+    string description = 2;
 
-  // The enumeration of the types of a cloud resource container.
-  enum ContainerType {
-    // Unspecified container type.
-    CONTAINER_TYPE_UNSPECIFIED = 0;
-
-    // consumer project
-    PROJECT = 1;
-
-    // folder
-    FOLDER = 2;
-
-    // organization
-    ORGANIZATION = 3;
+    // The status code.
+    Status status = 4;
   }
 
-  // Resource name of this QuotaInfo.
-  // The ID component following "locations/" must be "global".
-  // Example:
-  // `projects/123/locations/global/services/compute.googleapis.com/quotaInfos/CpusPerProjectPerRegion`
+  // Code describes the status of the operation (or one of its steps).
+  enum Status {
+    // Unspecifed code.
+    STATUS_UNSPECIFIED = 0;
+
+    // The operation or step has completed without errors.
+    DONE = 1;
+
+    // The operation or step has not started yet.
+    NOT_STARTED = 2;
+
+    // The operation or step is in progress.
+    IN_PROGRESS = 3;
+
+    // The operation or step has completed with errors. If the operation is
+    // rollbackable, the rollback completed with errors too.
+    FAILED = 4;
+
+    // The operation or step has completed with cancellation.
+    CANCELLED = 5;
+  }
+
+  // The full name of the resources that this operation is directly
+  // associated with.
+  repeated string resource_names = 1;
+
+  // Detailed status information for each step. The order is undetermined.
+  repeated Step steps = 2;
+
+  // Percentage of completion of this operation, ranging from 0 to 100.
+  int32 progress_percentage = 3;
+
+  // The start time of the operation.
+  google.protobuf.Timestamp start_time = 4;
+}
+
+// Represents a diagnostic message (error or warning)
+message Diagnostic {
+  // The kind of diagnostic information possible.
+  enum Kind {
+    // Warnings and errors
+    WARNING = 0;
+
+    // Only errors
+    ERROR = 1;
+  }
+
+  // File name and line number of the error or warning.
+  string location = 1;
+
+  // The kind of diagnostic information provided.
+  Kind kind = 2;
+
+  // Message describing the error or warning.
+  string message = 3;
+}
+
+// Represents a source file which is used to generate the service configuration
+// defined by `google.api.Service`.
+message ConfigSource {
+  // A unique ID for a specific instance of this message, typically assigned
+  // by the client for tracking purpose. If empty, the server may choose to
+  // generate one instead.
+  string id = 5;
+
+  // Set of source configuration files that are used to generate a service
+  // configuration (`google.api.Service`).
+  repeated ConfigFile files = 2;
+}
+
+// Generic specification of a source configuration file
+message ConfigFile {
+  enum FileType {
+    // Unknown file type.
+    FILE_TYPE_UNSPECIFIED = 0;
+
+    // YAML-specification of service.
+    SERVICE_CONFIG_YAML = 1;
+
+    // OpenAPI specification, serialized in JSON.
+    OPEN_API_JSON = 2;
+
+    // OpenAPI specification, serialized in YAML.
+    OPEN_API_YAML = 3;
+
+    // FileDescriptorSet, generated by protoc.
+    //
+    // To generate, use protoc with imports and source info included.
+    // For an example test.proto file, the following command would put the value
+    // in a new file named out.pb.
+    //
+    // $protoc --include_imports --include_source_info test.proto -o out.pb
+    FILE_DESCRIPTOR_SET_PROTO = 4;
+
+    // Uncompiled Proto file. Used for storage and display purposes only,
+    // currently server-side compilation is not supported. Should match the
+    // inputs to 'protoc' command used to generated FILE_DESCRIPTOR_SET_PROTO. A
+    // file of this type can only be included if at least one file of type
+    // FILE_DESCRIPTOR_SET_PROTO is included.
+    PROTO_FILE = 6;
+  }
+
+  // The file name of the configuration file (full or relative path).
+  string file_path = 1;
+
+  // The bytes that constitute the file.
+  bytes file_contents = 3;
+
+  // The type of configuration file this represents.
+  FileType file_type = 4;
+}
+
+// Represents a service configuration with its name and id.
+message ConfigRef {
+  // Resource name of a service config. It must have the following
+  // format: "services/{service name}/configs/{config id}".
   string name = 1;
-
-  // The id of the quota, which is unquie within the service.
-  // Example: `CpusPerProjectPerRegion`
-  string quota_id = 2;
-
-  // The metric of the quota. It specifies the resources consumption the quota
-  // is defined for.
-  // Example: `compute.googleapis.com/cpus`
-  string metric = 3;
-
-  // The name of the service in which the quota is defined.
-  // Example: `compute.googleapis.com`
-  string service = 4;
-
-  // Whether this is a precise quota. A precise quota is tracked with absolute
-  // precision. In contrast, an imprecise quota is not tracked with precision.
-  bool is_precise = 5;
-
-  // The reset time interval for the quota. Refresh interval applies to rate
-  // quota only.
-  // Example: "minute" for per minute, "day" for per day, or "10 seconds" for
-  // every 10 seconds.
-  string refresh_interval = 6;
-
-  // The container type of the QuotaInfo.
-  ContainerType container_type = 7;
-
-  // The dimensions the quota is defined on.
-  repeated string dimensions = 8;
-
-  // The display name of the quota metric
-  string metric_display_name = 9;
-
-  // The display name of the quota.
-  string quota_display_name = 10;
-
-  // The unit in which the metric value is reported, e.g., "MByte".
-  string metric_unit = 11;
-
-  // Whether it is eligible to request a higher quota value for this quota.
-  QuotaIncreaseEligibility quota_increase_eligibility = 12;
-
-  // Whether the quota value is fixed or adjustable
-  bool is_fixed = 13;
-
-  // The collection of dimensions info ordered by their dimensions from more
-  // specific ones to less specific ones.
-  repeated DimensionsInfo dimensions_infos = 14;
-
-  // Whether the quota is a concurrent quota. Concurrent quotas are enforced
-  // on the total number of concurrent operations in flight at any given time.
-  bool is_concurrent = 15;
-
-  // URI to the page where users can request more quota for the cloud
-  // service—for example,
-  // https://console.cloud.google.com/iam-admin/quotas.
-  string service_request_quota_uri = 17;
 }
 
-// Eligibility information regarding requesting increase adjustment of a quota.
-message QuotaIncreaseEligibility {
-  // The enumeration of reasons when it is ineligible to request increase
-  // adjustment.
-  enum IneligibilityReason {
-    // Default value when is_eligible is true.
-    INELIGIBILITY_REASON_UNSPECIFIED = 0;
+// Change report associated with a particular service configuration.
+//
+// It contains a list of ConfigChanges based on the comparison between
+// two service configurations.
+message ChangeReport {
+  // List of changes between two service configurations.
+  // The changes will be alphabetically sorted based on the identifier
+  // of each change.
+  // A ConfigChange identifier is a dot separated path to the configuration.
+  // Example: visibility.rules[selector='LibraryService.CreateBook'].restriction
+  repeated google.api.ConfigChange config_changes = 1;
+}
 
-    // The container is not linked with a valid billing account.
-    NO_VALID_BILLING_ACCOUNT = 1;
-
-    // Quota increase is not supported for the quota.
-    NOT_SUPPORTED = 3;
-
-    // There is not enough usage history to determine the eligibility.
-    NOT_ENOUGH_USAGE_HISTORY = 4;
-
-    // Other reasons.
-    OTHER = 2;
+// A rollout resource that defines how service configuration versions are pushed
+// to control plane systems. Typically, you create a new version of the
+// service config, and then create a Rollout to push the service config.
+message Rollout {
+  // Strategy that specifies how clients of Google Service Controller want to
+  // send traffic to use different config versions. This is generally
+  // used by API proxy to split traffic based on your configured percentage for
+  // each config version.
+  //
+  // One example of how to gradually rollout a new service configuration using
+  // this
+  // strategy:
+  // Day 1
+  //
+  //     Rollout {
+  //       id: "example.googleapis.com/rollout_20160206"
+  //       traffic_percent_strategy {
+  //         percentages: {
+  //           "example.googleapis.com/20160201": 70.00
+  //           "example.googleapis.com/20160206": 30.00
+  //         }
+  //       }
+  //     }
+  //
+  // Day 2
+  //
+  //     Rollout {
+  //       id: "example.googleapis.com/rollout_20160207"
+  //       traffic_percent_strategy: {
+  //         percentages: {
+  //           "example.googleapis.com/20160206": 100.00
+  //         }
+  //       }
+  //     }
+  message TrafficPercentStrategy {
+    // Maps service configuration IDs to their corresponding traffic percentage.
+    // Key is the service configuration ID, Value is the traffic percentage
+    // which must be greater than 0.0 and the sum must equal to 100.0.
+    map<string, double> percentages = 1;
   }
 
-  // Whether a higher quota value can be requested for the quota.
-  bool is_eligible = 1;
+  // Strategy used to delete a service. This strategy is a placeholder only
+  // used by the system generated rollout to delete a service.
+  message DeleteServiceStrategy {}
 
-  // The reason of why it is ineligible to request increased value of the quota.
-  // If the is_eligible field is true, it defaults to
-  // INELIGIBILITY_REASON_UNSPECIFIED.
-  IneligibilityReason ineligibility_reason = 2;
-}
+  // Status of a Rollout.
+  enum RolloutStatus {
+    // No status specified.
+    ROLLOUT_STATUS_UNSPECIFIED = 0;
 
-// QuotaPreference represents the preferred quota configuration specified for
-// a project, folder or organization. There is only one QuotaPreference
-// resource for a quota value targeting a unique set of dimensions.
-message QuotaPreference {
-  option (google.api.resource) = {
-    type: "cloudquotas.googleapis.com/QuotaPreference"
-    pattern: "projects/{project}/locations/{location}/quotaPreferences/{quota_preference}"
-    pattern: "folders/{folder}/locations/{location}/quotaPreferences/{quota_preference}"
-    pattern: "organizations/{organization}/locations/{location}/quotaPreferences/{quota_preference}"
-  };
+    // The Rollout is in progress.
+    IN_PROGRESS = 1;
 
-  // Required except in the CREATE requests.
-  // The resource name of the quota preference.
-  // The ID component following "locations/" must be "global".
-  // Example:
-  // `projects/123/locations/global/quotaPreferences/my-config-for-us-east1`
-  string name = 1;
+    // The Rollout has completed successfully.
+    SUCCESS = 2;
 
-  // Immutable. The dimensions that this quota preference applies to. The key of
-  // the map entry is the name of a dimension, such as "region", "zone",
-  // "network_id", and the value of the map entry is the dimension value.
-  //
-  // If a dimension is missing from the map of dimensions, the quota preference
-  // applies to all the dimension values except for those that have other quota
-  // preferences configured for the specific value.
-  //
-  // NOTE: QuotaPreferences can only be applied across all values of "user" and
-  // "resource" dimension. Do not set values for "user" or "resource" in the
-  // dimension map.
-  //
-  // Example: {"provider", "Foo Inc"} where "provider" is a service specific
-  // dimension.
-  map<string, string> dimensions = 2 [(google.api.field_behavior) = IMMUTABLE];
+    // The Rollout has been cancelled. This can happen if you have overlapping
+    // Rollout pushes, and the previous ones will be cancelled.
+    CANCELLED = 3;
 
-  // Required. Preferred quota configuration.
-  QuotaConfig quota_config = 3 [(google.api.field_behavior) = REQUIRED];
+    // The Rollout has failed and the rollback attempt has failed too.
+    FAILED = 4;
 
-  // Optional. The current etag of the quota preference. If an etag is provided
-  // on update and does not match the current server's etag of the quota
-  // preference, the request will be blocked and an ABORTED error will be
-  // returned. See https://google.aip.dev/134#etags for more details on etags.
-  string etag = 4 [(google.api.field_behavior) = OPTIONAL];
+    // The Rollout has not started yet and is pending for execution.
+    PENDING = 5;
 
-  // Output only. Create time stamp
-  google.protobuf.Timestamp create_time = 5
-      [(google.api.field_behavior) = OUTPUT_ONLY];
-
-  // Output only. Update time stamp
-  google.protobuf.Timestamp update_time = 6
-      [(google.api.field_behavior) = OUTPUT_ONLY];
-
-  // Required. The name of the service to which the quota preference is applied.
-  string service = 7 [(google.api.field_behavior) = REQUIRED];
-
-  // Required. The id of the quota to which the quota preference is applied. A
-  // quota name is unique in the service. Example: `CpusPerProjectPerRegion`
-  string quota_id = 8 [(google.api.field_behavior) = REQUIRED];
-
-  // Output only. Is the quota preference pending Google Cloud approval and
-  // fulfillment.
-  bool reconciling = 10 [(google.api.field_behavior) = OUTPUT_ONLY];
-
-  // The reason / justification for this quota preference.
-  string justification = 11;
-
-  // Input only. An email address that can be used to contact the the user, in
-  // case Google Cloud needs more information to make a decision before
-  // additional quota can be granted.
-  //
-  // When requesting a quota increase, the email address is required.
-  // When requesting a quota decrease, the email address is optional.
-  // For example, the email address is optional when the
-  // `QuotaConfig.preferred_value` is smaller than the
-  // `QuotaDetails.reset_value`.
-  string contact_email = 12 [(google.api.field_behavior) = INPUT_ONLY];
-}
-
-// The preferred quota configuration.
-message QuotaConfig {
-  // The enumeration of the origins of quota preference requests.
-  enum Origin {
-    // The unspecified value.
-    ORIGIN_UNSPECIFIED = 0;
-
-    // Created through Cloud Console.
-    CLOUD_CONSOLE = 1;
-
-    // Generated by automatic quota adjustment.
-    AUTO_ADJUSTER = 2;
+    // The Rollout has failed and rolled back to the previous successful
+    // Rollout.
+    FAILED_ROLLED_BACK = 6;
   }
 
-  // Required. The preferred value. Must be greater than or equal to -1. If set
-  // to -1, it means the value is "unlimited".
-  int64 preferred_value = 1 [(google.api.field_behavior) = REQUIRED];
+  // Optional. Unique identifier of this Rollout. Must be no longer than 63
+  // characters and only lower case letters, digits, '.', '_' and '-' are
+  // allowed.
+  //
+  // If not specified by client, the server will generate one. The generated id
+  // will have the form of <date><revision number>, where "date" is the create
+  // date in ISO 8601 format.  "revision number" is a monotonically increasing
+  // positive number that is reset every day for each service.
+  // An example of the generated rollout_id is '2016-02-16r1'
+  string rollout_id = 1 [(google.api.field_behavior) = OPTIONAL];
 
-  // Output only. Optional details about the state of this quota preference.
-  string state_detail = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Creation time of the rollout. Readonly.
+  google.protobuf.Timestamp create_time = 2;
 
-  // Output only. Granted quota value.
-  google.protobuf.Int64Value granted_value = 3
-      [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The user who created the Rollout. Readonly.
+  string created_by = 3;
 
-  // Output only. The trace id that the Google Cloud uses to provision the
-  // requested quota. This trace id may be used by the client to contact Cloud
-  // support to track the state of a quota preference request. The trace id is
-  // only produced for increase requests and is unique for each request. The
-  // quota decrease requests do not have a trace id.
-  string trace_id = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // The status of this rollout. Readonly. In case of a failed rollout,
+  // the system will automatically rollback to the current Rollout
+  // version. Readonly.
+  RolloutStatus status = 4;
 
-  // Optional. The annotations map for clients to store small amounts of
-  // arbitrary data. Do not put PII or other sensitive information here. See
-  // https://google.aip.dev/128#annotations
-  map<string, string> annotations = 5 [(google.api.field_behavior) = OPTIONAL];
+  // Strategy that defines which versions of service configurations should be
+  // pushed
+  // and how they should be used at runtime.
+  oneof strategy {
+    // Google Service Control selects service configurations based on
+    // traffic percentage.
+    TrafficPercentStrategy traffic_percent_strategy = 5;
 
-  // Output only. The origin of the quota preference request.
-  Origin request_origin = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
-}
+    // The strategy associated with a rollout to delete a `ManagedService`.
+    // Readonly.
+    DeleteServiceStrategy delete_service_strategy = 200;
+  }
 
-// The detailed quota information such as effective quota value for a
-// combination of dimensions.
-message DimensionsInfo {
-  // The map of dimensions for this dimensions info. The key of a map entry
-  // is "region", "zone" or the name of a service specific dimension, and the
-  // value of a map entry is the value of the dimension.  If a dimension does
-  // not appear in the map of dimensions, the dimensions info applies to all
-  // the dimension values except for those that have another DimenisonInfo
-  // instance configured for the specific value.
-  // Example: {"provider" : "Foo Inc"} where "provider" is a service specific
-  // dimension of a quota.
-  map<string, string> dimensions = 1;
-
-  // Quota details for the specified dimensions.
-  QuotaDetails details = 2;
-
-  // The applicable regions or zones of this dimensions info. The field will be
-  // set to ['global'] for quotas that are not per region or per zone.
-  // Otherwise, it will be set to the list of locations this dimension info is
-  // applicable to.
-  repeated string applicable_locations = 3;
-}
-
-// The quota details for a map of dimensions.
-message QuotaDetails {
-  // The value currently in effect and being enforced.
-  int64 value = 1;
-
-  // Rollout information of this quota.
-  // This field is present only if the effective limit will change due to the
-  // ongoing rollout of the service config.
-  RolloutInfo rollout_info = 3;
-}
-
-// [Output only] Rollout information of a quota.
-message RolloutInfo {
-  // Whether there is an ongoing rollout for a quota or not.
-  bool ongoing_rollout = 1;
+  // The name of the service associated with this Rollout.
+  string service_name = 8;
 }
