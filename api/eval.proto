@@ -11,32 +11,31 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
 
 syntax = "proto3";
 
-package google.api.expr.v1beta1;
+package google.api.expr.v1alpha1;
 
-import "google/api/expr/v1beta1/value.proto";
+import "google/api/expr/v1alpha1/value.proto";
 import "google/rpc/status.proto";
 
 option cc_enable_arenas = true;
-option go_package = "google.golang.org/genproto/googleapis/api/expr/v1beta1;expr";
+option go_package = "google.golang.org/genproto/googleapis/api/expr/v1alpha1;expr";
 option java_multiple_files = true;
 option java_outer_classname = "EvalProto";
-option java_package = "com.google.api.expr.v1beta1";
+option java_package = "com.google.api.expr.v1alpha1";
 
 // The state of an evaluation.
 //
-// Can represent an initial, partial, or completed state of evaluation.
+// Can represent an inital, partial, or completed state of evaluation.
 message EvalState {
-  // A single evaluation result.
+  // A single evalution result.
   message Result {
-    // The expression this result is for.
-    IdRef expr = 1;
+    // The id of the expression this result if for.
+    int64 expr = 1;
 
     // The index in `values` of the resulting value.
-    int32 value = 2;
+    int64 value = 2;
   }
 
   // The unique values referenced in this message.
@@ -115,11 +114,5 @@ message ErrorSet {
 // The unknowns included depend on the context. See `ExprValue.unknown`.
 message UnknownSet {
   // The ids of the expressions with unknown values.
-  repeated IdRef exprs = 1;
-}
-
-// A reference to an expression id.
-message IdRef {
-  // The expression id.
-  int32 id = 1;
+  repeated int64 exprs = 1;
 }
