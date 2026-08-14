@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 
 syntax = "proto3";
 
-package google.api.cloudquotas.v1beta;
+package google.api.cloudquotas.v1;
 
 import "google/api/annotations.proto";
 import "google/api/client.proto";
@@ -23,13 +23,13 @@ import "google/api/resource.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 
-option csharp_namespace = "Google.Cloud.CloudQuotas.V1Beta";
-option go_package = "cloud.google.com/go/cloudquotas/apiv1beta/cloudquotaspb;cloudquotaspb";
+option csharp_namespace = "Google.Cloud.CloudQuotas.V1";
+option go_package = "cloud.google.com/go/cloudquotas/apiv1/cloudquotaspb;cloudquotaspb";
 option java_multiple_files = true;
 option java_outer_classname = "QuotaAdjusterSettingsProto";
-option java_package = "com.google.api.cloudquotas.v1beta";
-option php_namespace = "Google\\Cloud\\CloudQuotas\\V1beta";
-option ruby_package = "Google::Cloud::CloudQuotas::V1beta";
+option java_package = "com.google.api.cloudquotas.v1";
+option php_namespace = "Google\\Cloud\\CloudQuotas\\V1";
+option ruby_package = "Google::Cloud::CloudQuotas::V1";
 
 // The Quotas Adjuster Settings API is an infrastructure service for Google
 //  Cloud that lets service consumers view and update their quota adjuster
@@ -46,14 +46,14 @@ service QuotaAdjusterSettingsManager {
   rpc UpdateQuotaAdjusterSettings(UpdateQuotaAdjusterSettingsRequest)
       returns (QuotaAdjusterSettings) {
     option (google.api.http) = {
-      patch: "/v1beta/{quota_adjuster_settings.name=projects/*/locations/*/quotaAdjusterSettings}"
+      patch: "/v1/{quota_adjuster_settings.name=projects/*/locations/*/quotaAdjusterSettings}"
       body: "quota_adjuster_settings"
       additional_bindings {
-        patch: "/v1beta/{quota_adjuster_settings.name=folders/*/locations/*/quotaAdjusterSettings}"
+        patch: "/v1/{quota_adjuster_settings.name=folders/*/locations/*/quotaAdjusterSettings}"
         body: "quota_adjuster_settings"
       }
       additional_bindings {
-        patch: "/v1beta/{quota_adjuster_settings.name=organizations/*/locations/*/quotaAdjusterSettings}"
+        patch: "/v1/{quota_adjuster_settings.name=organizations/*/locations/*/quotaAdjusterSettings}"
         body: "quota_adjuster_settings"
       }
     };
@@ -65,12 +65,12 @@ service QuotaAdjusterSettingsManager {
   rpc GetQuotaAdjusterSettings(GetQuotaAdjusterSettingsRequest)
       returns (QuotaAdjusterSettings) {
     option (google.api.http) = {
-      get: "/v1beta/{name=projects/*/locations/*/quotaAdjusterSettings}"
+      get: "/v1/{name=projects/*/locations/*/quotaAdjusterSettings}"
       additional_bindings {
-        get: "/v1beta/{name=folders/*/locations/*/quotaAdjusterSettings}"
+        get: "/v1/{name=folders/*/locations/*/quotaAdjusterSettings}"
       }
       additional_bindings {
-        get: "/v1beta/{name=organizations/*/locations/*/quotaAdjusterSettings}"
+        get: "/v1/{name=organizations/*/locations/*/quotaAdjusterSettings}"
       }
     };
     option (google.api.method_signature) = "name";
@@ -79,10 +79,11 @@ service QuotaAdjusterSettingsManager {
 
 // Request for getting QuotaAdjusterSettings
 message GetQuotaAdjusterSettingsRequest {
-  // Required. Name of the `quotaAdjusterSettings` configuration. Only a single
-  // setting per project is supported.
+  // Required. Identifier. Name of the `quotaAdjusterSettings` configuration.
+  // Only a single setting per project is supported.
   string name = 1 [
     (google.api.field_behavior) = REQUIRED,
+    (google.api.field_behavior) = IDENTIFIER,
     (google.api.resource_reference) = {
       type: "cloudquotas.googleapis.com/QuotaAdjusterSettings"
     }
