@@ -14,162 +14,282 @@
 
 syntax = "proto3";
 
-package google.api.apikeys.v2;
+package google.api.servicemanagement.v1;
 
+import "google/api/config_change.proto";
 import "google/api/field_behavior.proto";
-import "google/api/resource.proto";
 import "google/protobuf/timestamp.proto";
 
-option csharp_namespace = "Google.Cloud.ApiKeys.V2";
-option go_package = "cloud.google.com/go/apikeys/apiv2/apikeyspb;apikeyspb";
+option csharp_namespace = "Google.Cloud.ServiceManagement.V1";
+option go_package = "cloud.google.com/go/servicemanagement/apiv1/servicemanagementpb;servicemanagementpb";
 option java_multiple_files = true;
 option java_outer_classname = "ResourcesProto";
-option java_package = "com.google.api.apikeys.v2";
-option php_namespace = "Google\\Cloud\\ApiKeys\\V2";
-option ruby_package = "Google::Cloud::ApiKeys::V2";
+option java_package = "com.google.api.servicemanagement.v1";
+option objc_class_prefix = "GASM";
+option php_namespace = "Google\\Cloud\\ServiceManagement\\V1";
+option ruby_package = "Google::Cloud::ServiceManagement::V1";
 
-// The representation of a key managed by the API Keys API.
-message Key {
-  option (google.api.resource) = {
-    type: "apikeys.googleapis.com/Key"
-    pattern: "projects/{project}/locations/{location}/keys/{key}"
-    plural: "keys"
-    singular: "key"
-    style: DECLARATIVE_FRIENDLY
-  };
+// The full representation of a Service that is managed by
+// Google Service Management.
+message ManagedService {
+  // The name of the service. See the
+  // [overview](https://cloud.google.com/service-infrastructure/docs/overview)
+  // for naming requirements.
+  string service_name = 2;
 
-  // Output only. The resource name of the key.
-  // The `name` has the form:
-  // `projects/<PROJECT_NUMBER>/locations/global/keys/<KEY_ID>`.
-  // For example:
-  // `projects/123456867718/locations/global/keys/b7ff1f9f-8275-410a-94dd-3855ee9b5dd2`
-  //
-  // NOTE: Key is a global resource; hence the only supported value for
-  // location is `global`.
-  string name = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
-
-  // Output only. Unique id in UUID4 format.
-  string uid = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
-
-  // Human-readable display name of this key that you can modify.
-  // The maximum length is 63 characters.
-  string display_name = 2;
-
-  // Output only. An encrypted and signed value held by this key.
-  // This field can be accessed only through the `GetKeyString` method.
-  string key_string = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
-
-  // Output only. A timestamp identifying the time this key was originally
-  // created.
-  google.protobuf.Timestamp create_time = 4
-      [(google.api.field_behavior) = OUTPUT_ONLY];
-
-  // Output only. A timestamp identifying the time this key was last
-  // updated.
-  google.protobuf.Timestamp update_time = 6
-      [(google.api.field_behavior) = OUTPUT_ONLY];
-
-  // Output only. A timestamp when this key was deleted. If the resource is not
-  // deleted, this must be empty.
-  google.protobuf.Timestamp delete_time = 7
-      [(google.api.field_behavior) = OUTPUT_ONLY];
-
-  // Annotations is an unstructured key-value map stored with a policy that
-  // may be set by external tools to store and retrieve arbitrary metadata.
-  // They are not queryable and should be preserved when modifying objects.
-  map<string, string> annotations = 8;
-
-  // Key restrictions.
-  Restrictions restrictions = 9;
-
-  // Output only. A checksum computed by the server based on the current value
-  // of the Key resource. This may be sent on update and delete requests to
-  // ensure the client has an up-to-date value before proceeding. See
-  // https://google.aip.dev/154.
-  string etag = 11 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // ID of the project that produces and owns this service.
+  string producer_project_id = 3;
 }
 
-// Describes the restrictions on the key.
-message Restrictions {
-  // The websites, IP addresses, Android apps, or iOS apps (the clients) that
-  // are allowed to use the key. You can specify only one type of client
-  // restrictions per key.
-  oneof client_restrictions {
-    // The HTTP referrers (websites) that are allowed to use the key.
-    BrowserKeyRestrictions browser_key_restrictions = 1;
+// The metadata associated with a long running operation resource.
+message OperationMetadata {
+  // Represents the status of one operation step.
+  message Step {
+    // The short description of the step.
+    string description = 2;
 
-    // The IP addresses of callers that are allowed to use the key.
-    ServerKeyRestrictions server_key_restrictions = 2;
-
-    // The Android apps that are allowed to use the key.
-    AndroidKeyRestrictions android_key_restrictions = 3;
-
-    // The iOS apps that are allowed to use the key.
-    IosKeyRestrictions ios_key_restrictions = 4;
+    // The status code.
+    Status status = 4;
   }
 
-  // A restriction for a specific service and optionally one or
-  // more specific methods. Requests are allowed if they
-  // match any of these restrictions. If no restrictions are
-  // specified, all targets are allowed.
-  repeated ApiTarget api_targets = 5;
+  // Code describes the status of the operation (or one of its steps).
+  enum Status {
+    // Unspecifed code.
+    STATUS_UNSPECIFIED = 0;
+
+    // The operation or step has completed without errors.
+    DONE = 1;
+
+    // The operation or step has not started yet.
+    NOT_STARTED = 2;
+
+    // The operation or step is in progress.
+    IN_PROGRESS = 3;
+
+    // The operation or step has completed with errors. If the operation is
+    // rollbackable, the rollback completed with errors too.
+    FAILED = 4;
+
+    // The operation or step has completed with cancellation.
+    CANCELLED = 5;
+  }
+
+  // The full name of the resources that this operation is directly
+  // associated with.
+  repeated string resource_names = 1;
+
+  // Detailed status information for each step. The order is undetermined.
+  repeated Step steps = 2;
+
+  // Percentage of completion of this operation, ranging from 0 to 100.
+  int32 progress_percentage = 3;
+
+  // The start time of the operation.
+  google.protobuf.Timestamp start_time = 4;
 }
 
-// The HTTP referrers (websites) that are allowed to use the key.
-message BrowserKeyRestrictions {
-  // A list of regular expressions for the referrer URLs that are allowed
-  // to make API calls with this key.
-  repeated string allowed_referrers = 1;
+// Represents a diagnostic message (error or warning)
+message Diagnostic {
+  // The kind of diagnostic information possible.
+  enum Kind {
+    // Warnings and errors
+    WARNING = 0;
+
+    // Only errors
+    ERROR = 1;
+  }
+
+  // File name and line number of the error or warning.
+  string location = 1;
+
+  // The kind of diagnostic information provided.
+  Kind kind = 2;
+
+  // Message describing the error or warning.
+  string message = 3;
 }
 
-// The IP addresses of callers that are allowed to use the key.
-message ServerKeyRestrictions {
-  // A list of the caller IP addresses that are allowed to make API calls
-  // with this key.
-  repeated string allowed_ips = 1;
+// Represents a source file which is used to generate the service configuration
+// defined by `google.api.Service`.
+message ConfigSource {
+  // A unique ID for a specific instance of this message, typically assigned
+  // by the client for tracking purpose. If empty, the server may choose to
+  // generate one instead.
+  string id = 5;
+
+  // Set of source configuration files that are used to generate a service
+  // configuration (`google.api.Service`).
+  repeated ConfigFile files = 2;
 }
 
-// The Android apps that are allowed to use the key.
-message AndroidKeyRestrictions {
-  // A list of Android applications that are allowed to make API calls with
-  // this key.
-  repeated AndroidApplication allowed_applications = 1;
+// Generic specification of a source configuration file
+message ConfigFile {
+  enum FileType {
+    // Unknown file type.
+    FILE_TYPE_UNSPECIFIED = 0;
+
+    // YAML-specification of service.
+    SERVICE_CONFIG_YAML = 1;
+
+    // OpenAPI specification, serialized in JSON.
+    OPEN_API_JSON = 2;
+
+    // OpenAPI specification, serialized in YAML.
+    OPEN_API_YAML = 3;
+
+    // FileDescriptorSet, generated by protoc.
+    //
+    // To generate, use protoc with imports and source info included.
+    // For an example test.proto file, the following command would put the value
+    // in a new file named out.pb.
+    //
+    // $protoc --include_imports --include_source_info test.proto -o out.pb
+    FILE_DESCRIPTOR_SET_PROTO = 4;
+
+    // Uncompiled Proto file. Used for storage and display purposes only,
+    // currently server-side compilation is not supported. Should match the
+    // inputs to 'protoc' command used to generated FILE_DESCRIPTOR_SET_PROTO. A
+    // file of this type can only be included if at least one file of type
+    // FILE_DESCRIPTOR_SET_PROTO is included.
+    PROTO_FILE = 6;
+  }
+
+  // The file name of the configuration file (full or relative path).
+  string file_path = 1;
+
+  // The bytes that constitute the file.
+  bytes file_contents = 3;
+
+  // The type of configuration file this represents.
+  FileType file_type = 4;
 }
 
-// Identifier of an Android application for key use.
-message AndroidApplication {
-  // The SHA1 fingerprint of the application. For example, both sha1 formats are
-  // acceptable : DA:39:A3:EE:5E:6B:4B:0D:32:55:BF:EF:95:60:18:90:AF:D8:07:09 or
-  // DA39A3EE5E6B4B0D3255BFEF95601890AFD80709.
-  // Output format is the latter.
-  string sha1_fingerprint = 1;
-
-  // The package name of the application.
-  string package_name = 2;
+// Represents a service configuration with its name and id.
+message ConfigRef {
+  // Resource name of a service config. It must have the following
+  // format: "services/{service name}/configs/{config id}".
+  string name = 1;
 }
 
-// The iOS apps that are allowed to use the key.
-message IosKeyRestrictions {
-  // A list of bundle IDs that are allowed when making API calls with this key.
-  repeated string allowed_bundle_ids = 1;
+// Change report associated with a particular service configuration.
+//
+// It contains a list of ConfigChanges based on the comparison between
+// two service configurations.
+message ChangeReport {
+  // List of changes between two service configurations.
+  // The changes will be alphabetically sorted based on the identifier
+  // of each change.
+  // A ConfigChange identifier is a dot separated path to the configuration.
+  // Example: visibility.rules[selector='LibraryService.CreateBook'].restriction
+  repeated google.api.ConfigChange config_changes = 1;
 }
 
-// A restriction for a specific service and optionally one or multiple
-// specific methods. Both fields are case insensitive.
-message ApiTarget {
-  // The service for this restriction. It should be the canonical
-  // service name, for example: `translate.googleapis.com`.
-  // You can use [`gcloud services list`](/sdk/gcloud/reference/services/list)
-  // to get a list of services that are enabled in the project.
-  string service = 1;
+// A rollout resource that defines how service configuration versions are pushed
+// to control plane systems. Typically, you create a new version of the
+// service config, and then create a Rollout to push the service config.
+message Rollout {
+  // Strategy that specifies how clients of Google Service Controller want to
+  // send traffic to use different config versions. This is generally
+  // used by API proxy to split traffic based on your configured percentage for
+  // each config version.
+  //
+  // One example of how to gradually rollout a new service configuration using
+  // this
+  // strategy:
+  // Day 1
+  //
+  //     Rollout {
+  //       id: "example.googleapis.com/rollout_20160206"
+  //       traffic_percent_strategy {
+  //         percentages: {
+  //           "example.googleapis.com/20160201": 70.00
+  //           "example.googleapis.com/20160206": 30.00
+  //         }
+  //       }
+  //     }
+  //
+  // Day 2
+  //
+  //     Rollout {
+  //       id: "example.googleapis.com/rollout_20160207"
+  //       traffic_percent_strategy: {
+  //         percentages: {
+  //           "example.googleapis.com/20160206": 100.00
+  //         }
+  //       }
+  //     }
+  message TrafficPercentStrategy {
+    // Maps service configuration IDs to their corresponding traffic percentage.
+    // Key is the service configuration ID, Value is the traffic percentage
+    // which must be greater than 0.0 and the sum must equal to 100.0.
+    map<string, double> percentages = 1;
+  }
 
-  // Optional. List of one or more methods that can be called.
-  // If empty, all methods for the service are allowed. A wildcard
-  // (*) can be used as the last symbol.
-  // Valid examples:
-  //   `google.cloud.translate.v2.TranslateService.GetSupportedLanguage`
-  //   `TranslateText`
-  //   `Get*`
-  //   `translate.googleapis.com.Get*`
-  repeated string methods = 2 [(google.api.field_behavior) = OPTIONAL];
+  // Strategy used to delete a service. This strategy is a placeholder only
+  // used by the system generated rollout to delete a service.
+  message DeleteServiceStrategy {}
+
+  // Status of a Rollout.
+  enum RolloutStatus {
+    // No status specified.
+    ROLLOUT_STATUS_UNSPECIFIED = 0;
+
+    // The Rollout is in progress.
+    IN_PROGRESS = 1;
+
+    // The Rollout has completed successfully.
+    SUCCESS = 2;
+
+    // The Rollout has been cancelled. This can happen if you have overlapping
+    // Rollout pushes, and the previous ones will be cancelled.
+    CANCELLED = 3;
+
+    // The Rollout has failed and the rollback attempt has failed too.
+    FAILED = 4;
+
+    // The Rollout has not started yet and is pending for execution.
+    PENDING = 5;
+
+    // The Rollout has failed and rolled back to the previous successful
+    // Rollout.
+    FAILED_ROLLED_BACK = 6;
+  }
+
+  // Optional. Unique identifier of this Rollout. Must be no longer than 63
+  // characters and only lower case letters, digits, '.', '_' and '-' are
+  // allowed.
+  //
+  // If not specified by client, the server will generate one. The generated id
+  // will have the form of <date><revision number>, where "date" is the create
+  // date in ISO 8601 format.  "revision number" is a monotonically increasing
+  // positive number that is reset every day for each service.
+  // An example of the generated rollout_id is '2016-02-16r1'
+  string rollout_id = 1 [(google.api.field_behavior) = OPTIONAL];
+
+  // Creation time of the rollout. Readonly.
+  google.protobuf.Timestamp create_time = 2;
+
+  // The user who created the Rollout. Readonly.
+  string created_by = 3;
+
+  // The status of this rollout. Readonly. In case of a failed rollout,
+  // the system will automatically rollback to the current Rollout
+  // version. Readonly.
+  RolloutStatus status = 4;
+
+  // Strategy that defines which versions of service configurations should be
+  // pushed
+  // and how they should be used at runtime.
+  oneof strategy {
+    // Google Service Control selects service configurations based on
+    // traffic percentage.
+    TrafficPercentStrategy traffic_percent_strategy = 5;
+
+    // The strategy associated with a rollout to delete a `ManagedService`.
+    // Readonly.
+    DeleteServiceStrategy delete_service_strategy = 200;
+  }
+
+  // The name of the service associated with this Rollout.
+  string service_name = 8;
 }
